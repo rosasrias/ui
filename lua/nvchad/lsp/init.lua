@@ -1,13 +1,41 @@
 local M = {}
 
-M.diagnostic_config = function()
-  local x = vim.diagnostic.severity
+local diagnostic = vim.diagnostic
+local severity = diagnostic.severity
 
-  vim.diagnostic.config {
-    virtual_text = { prefix = "" },
-    signs = { text = { [x.ERROR] = "󰅙", [x.WARN] = "", [x.INFO] = "󰋼", [x.HINT] = "󰌵" } },
+local SIGNS = {
+  [severity.ERROR] = "󰅙",
+  [severity.WARN] = "",
+  [severity.INFO] = "󰋼",
+  [severity.HINT] = "󰌵",
+}
+
+local function diagnostic_prefix()
+  return "󰶻 ", "String"
+end
+
+function M.setup()
+  diagnostic.config {
+    virtual_text = {
+      prefix = "",
+    },
+
+    signs = {
+      text = SIGNS,
+    },
+
     underline = true,
-    float = { border = "single" },
+    update_in_insert = false,
+    severity_sort = true,
+
+    float = {
+      suffix = "",
+      header = {
+        "  Diagnostics",
+        "String",
+      },
+      prefix = diagnostic_prefix,
+    },
   }
 end
 
