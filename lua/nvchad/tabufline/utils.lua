@@ -95,7 +95,7 @@ M.btn = function(str, hl, func, arg)
   str = hl and M.txt(str, hl) or str
   arg = arg or ""
 
-  return "%" .. arg .. "@Tb" .. func .. "@" .. str .. "%X"
+  return "%" .. arg .. "@" .. func .. "@" .. str .. "%X"
 end
 
 M.style_buf = function(nr, index, width)

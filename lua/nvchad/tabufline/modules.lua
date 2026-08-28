@@ -66,12 +66,17 @@ local function register_callbacks()
     endfunction
 
     function! TbRun(a,b,c,d)
-      lua require('core.coderunner').build_run()
+      lua require('code-runner').build_run()
     endfunction
   ]]
 end
 
 register_callbacks()
+
+-- Hide the right-side action buttons while the dashboard is shown
+local function dashboard_active()
+  return vim.g.nvdash_displayed == true
+end
 
 -- Tree width
 local function get_tree_width()
@@ -154,13 +159,13 @@ M.buffers = function()
   local left_scroll = ""
 
   if state.scroll_offset > 1 then
-    left_scroll = btn("  ", "TbScroll", "TbScrollLeft")
+    left_scroll = btn("  ", "Scroll", "TbScrollLeft")
   end
 
   local right_scroll = ""
 
   if state.is_right_visible(last_index, total) then
-    right_scroll = btn("  ", "TbScroll", "TbScrollRight")
+    right_scroll = btn("  ", "Scroll", "TbScrollRight")
   end
 
   return table.concat {
@@ -194,6 +199,10 @@ end
 
 -- Run
 M.run = function()
+  if dashboard_active() then
+    return ""
+  end
+
   local icon = vim.bo.filetype == "html" and "󰀂" or ""
 
   return btn(" " .. icon .. " ", "BuffLineRun", "TbRun")
@@ -201,21 +210,37 @@ end
 
 -- Split
 M.split = function()
+  if dashboard_active() then
+    return ""
+  end
+
   return btn("  ", "BuffLineSplit", "TbSplit")
 end
 
 -- Transparency
 M.transparency = function()
+  if dashboard_active() then
+    return ""
+  end
+
   return btn(" 󱡓 ", "BufflineTrans", "TbToggleTransparency")
 end
 
 -- Theme
 M.theme_toggle = function()
+  if dashboard_active() then
+    return ""
+  end
+
   return btn(" 󱥚 ", "BuffLineToggleTheme", "TbToggleTheme")
 end
 
 -- Close all
 M.close_all = function()
+  if dashboard_active() then
+    return ""
+  end
+
   return btn(" 󰅗 ", "BufflineCloseButton", "TbCloseAllBufs")
 end
 
