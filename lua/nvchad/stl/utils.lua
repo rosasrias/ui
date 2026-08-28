@@ -8,49 +8,68 @@ M.is_activewin = function()
   return vim.api.nvim_get_current_win() == vim.g.statusline_winid
 end
 
+M.get_mode = function()
+  local mode = vim.api.nvim_get_mode().mode
+  return M.modes[mode] or M.modes.n
+end
+
+-- Orders
 local orders = {
   default = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cwd", "cursor" },
+  minimal = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cwd", "cursor" },
   vscode = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cursor", "cwd" },
+  blocks = { "mode", "file", "git", "diff", "%=", "diagnostics", "lsp_msg", "lsp", "cwd", "cursor" },
+  fancy = { "mode", "file", "git", "diff", "%=", "diagnostics", "lsp_msg", "lsp", "cwd", "cursor" },
 }
 
+-- Generator
 M.generate = function(theme, modules)
   local config = require("nvconfig").ui.statusline
-  local order = config.order or orders[theme]
+  local order = config.order or orders[theme] or orders.default
+
   local result = {}
 
+  -- Allow nvconfig modules to override built-in modules.
   if config.modules then
     for key, value in pairs(config.modules) do
       modules[key] = value
     end
   end
 
-  for _, v in ipairs(order) do
-    local module = modules[v]
-    module = type(module) == "string" and module or module()
-    table.insert(result, module)
+  for _, name in ipairs(order) do
+    local module = modules[name]
+
+    if module then
+      module = type(module) == "string" and module or module()
+
+      if module then
+        result[#result + 1] = module
+      end
+    end
   end
 
   return table.concat(result)
 end
 
--- 2nd item is highlight groupname St_NormalMode
+-- Modes
 M.modes = {
   ["n"] = { "NORMAL", "Normal" },
-  ["no"] = { "NORMAL (no)", "Normal" },
-  ["nov"] = { "NORMAL (nov)", "Normal" },
-  ["noV"] = { "NORMAL (noV)", "Normal" },
+  ["no"] = { "NORMAL", "Normal" },
+  ["nov"] = { "NORMAL", "Normal" },
+  ["noV"] = { "NORMAL", "Normal" },
   ["noCTRL-V"] = { "NORMAL", "Normal" },
+
   ["niI"] = { "NORMAL i", "Normal" },
   ["niR"] = { "NORMAL r", "Normal" },
   ["niV"] = { "NORMAL v", "Normal" },
+
   ["nt"] = { "NTERMINAL", "NTerminal" },
-  ["ntT"] = { "NTERMINAL (ntT)", "NTerminal" },
+  ["ntT"] = { "NTERMINAL", "NTerminal" },
 
   ["v"] = { "VISUAL", "Visual" },
-  ["vs"] = { "V-CHAR (Ctrl O)", "Visual" },
+  ["vs"] = { "V-CHAR", "Visual" },
   ["V"] = { "V-LINE", "Visual" },
   ["Vs"] = { "V-LINE", "Visual" },
-  [""] = { "V-BLOCK", "Visual" },
 
   ["i"] = { "INSERT", "Insert" },
   ["ic"] = { "INSERT", "Insert" },
@@ -59,125 +78,273 @@ M.modes = {
   ["t"] = { "TERMINAL", "Terminal" },
 
   ["R"] = { "REPLACE", "Replace" },
-  ["Rc"] = { "REPLACE (Rc)", "Replace" },
-  ["Rx"] = { "REPLACEa (Rx)", "Replace" },
+  ["Rc"] = { "REPLACE", "Replace" },
+  ["Rx"] = { "REPLACE", "Replace" },
   ["Rv"] = { "V-REPLACE", "Replace" },
-  ["Rvc"] = { "V-REPLACE (Rvc)", "Replace" },
-  ["Rvx"] = { "V-REPLACE (Rvx)", "Replace" },
+  ["Rvc"] = { "V-REPLACE", "Replace" },
+  ["Rvx"] = { "V-REPLACE", "Replace" },
 
   ["s"] = { "SELECT", "Select" },
   ["S"] = { "S-LINE", "Select" },
-  [""] = { "S-BLOCK", "Select" },
+  [""] = { "S-BLOCK", "Select" },
+
   ["c"] = { "COMMAND", "Command" },
   ["cv"] = { "COMMAND", "Command" },
   ["ce"] = { "COMMAND", "Command" },
   ["cr"] = { "COMMAND", "Command" },
+
   ["r"] = { "PROMPT", "Confirm" },
   ["rm"] = { "MORE", "Confirm" },
   ["r?"] = { "CONFIRM", "Confirm" },
   ["x"] = { "CONFIRM", "Confirm" },
+
   ["!"] = { "SHELL", "Terminal" },
 }
 
--- credits to ii14 for str:match func
+-- File
 M.file = function()
+  local buf = M.stbufnr()
+  local path = vim.api.nvim_buf_get_name(buf)
+
   local icon = "󰈚"
-  local path = vim.api.nvim_buf_get_name(M.stbufnr())
-  local name = (path == "" and "Empty") or path:match "([^/\\]+)[/\\]*$"
+  local name = "Empty"
+
+  if path ~= "" then
+    name = path:match "([^/\\]+)[/\\]*$" or "Empty"
+  end
 
   if name ~= "Empty" then
-    local devicons_present, devicons = pcall(require, "nvim-web-devicons")
+    local ok, mini_icons = pcall(require, "mini.icons")
 
-    if devicons_present then
-      local ft_icon = devicons.get_icon(name)
-      icon = (ft_icon ~= nil and ft_icon) or icon
+    if ok then
+      local ft_icon = mini_icons.get("file", name)
+
+      if ft_icon then
+        icon = ft_icon
+      end
+    else
+      local ok_devicons, devicons = pcall(require, "nvim-web-devicons")
+
+      if ok_devicons then
+        icon = devicons.get_icon(name) or icon
+      end
     end
   end
 
   return { icon, name }
 end
 
+-- Git
 M.git = function()
-  if not vim.b[M.stbufnr()].gitsigns_head or vim.b[M.stbufnr()].gitsigns_git_status then
+  local buf = M.stbufnr()
+
+  if not vim.b[buf].gitsigns_head or vim.b[buf].gitsigns_git_status then
     return ""
   end
 
-  local git_status = vim.b[M.stbufnr()].gitsigns_status_dict
+  local git_status = vim.b[buf].gitsigns_status_dict
 
-  local added = (git_status.added and git_status.added ~= 0) and ("  " .. git_status.added) or ""
-  local changed = (git_status.changed and git_status.changed ~= 0) and ("  " .. git_status.changed) or ""
-  local removed = (git_status.removed and git_status.removed ~= 0) and ("  " .. git_status.removed) or ""
-  local branch_name = " " .. git_status.head
+  if not git_status then
+    return ""
+  end
 
-  return " " .. branch_name .. added .. changed .. removed
+  local branch = git_status.head
+
+  if not branch then
+    return ""
+  end
+
+  return "%#St_gitIcons#  " .. branch .. " "
 end
+
+-- Git diff
+M.diff = function()
+  local buf = M.stbufnr()
+
+  if not vim.b[buf].gitsigns_head or vim.b[buf].gitsigns_git_status then
+    return ""
+  end
+
+  local status = vim.b[buf].gitsigns_status_dict
+
+  if not status then
+    return ""
+  end
+
+  local added = tonumber(status.added) or 0
+  local changed = tonumber(status.changed) or 0
+  local removed = tonumber(status.removed) or 0
+
+  local result = {}
+
+  if added > 0 then
+    result[#result + 1] = "%#St_gitAdded#  " .. added .. " "
+  end
+
+  if changed > 0 then
+    result[#result + 1] = "%#St_gitChanged#  " .. changed .. " "
+  end
+
+  if removed > 0 then
+    result[#result + 1] = "%#St_gitRemoved#  " .. removed .. " "
+  end
+
+  return table.concat(result)
+end
+
+-- LSP message
+M.state = {
+  lsp_msg = "",
+}
 
 M.lsp_msg = function()
-  return vim.o.columns < 120 and "" or M.state.lsp_msg
+  if vim.o.columns < 120 then
+    return ""
+  end
+
+  return M.state.lsp_msg
 end
 
+-- LSP
 M.lsp = function()
-  if rawget(vim, "lsp") then
-    for _, client in ipairs(vim.lsp.get_clients()) do
-      if client.attached_buffers[M.stbufnr()] then
-        return (vim.o.columns > 100 and "   LSP ~ " .. client.name .. " ") or "   LSP "
+  if not rawget(vim, "lsp") then
+    return ""
+  end
+
+  local buf = M.stbufnr()
+
+  for _, client in ipairs(vim.lsp.get_clients()) do
+    if client.attached_buffers and client.attached_buffers[buf] then
+      if vim.o.columns > 100 then
+        return "%#St_Lsp#   LSP ~ " .. client.name .. " "
       end
+
+      return "%#St_Lsp#   LSP "
     end
   end
 
   return ""
 end
 
+-- Diagnostics
 M.diagnostics = function()
-  if not rawget(vim, "lsp") then
+  if not rawget(vim, "diagnostic") then
     return ""
   end
 
-  local err = #vim.diagnostic.get(M.stbufnr(), { severity = vim.diagnostic.severity.ERROR })
-  local warn = #vim.diagnostic.get(M.stbufnr(), { severity = vim.diagnostic.severity.WARN })
-  local hints = #vim.diagnostic.get(M.stbufnr(), { severity = vim.diagnostic.severity.HINT })
-  local info = #vim.diagnostic.get(M.stbufnr(), { severity = vim.diagnostic.severity.INFO })
+  local buf = M.stbufnr()
 
-  err = (err and err > 0) and ("%#St_lspError#" .. " " .. err .. " ") or ""
-  warn = (warn and warn > 0) and ("%#St_lspWarning#" .. " " .. warn .. " ") or ""
-  hints = (hints and hints > 0) and ("%#St_lspHints#" .. "󰛩 " .. hints .. " ") or ""
-  info = (info and info > 0) and ("%#St_lspInfo#" .. "󰋼 " .. info .. " ") or ""
+  local errors = #vim.diagnostic.get(buf, {
+    severity = vim.diagnostic.severity.ERROR,
+  })
 
-  return " " .. err .. warn .. hints .. info
+  local warnings = #vim.diagnostic.get(buf, {
+    severity = vim.diagnostic.severity.WARN,
+  })
+
+  local hints = #vim.diagnostic.get(buf, {
+    severity = vim.diagnostic.severity.HINT,
+  })
+
+  local info = #vim.diagnostic.get(buf, {
+    severity = vim.diagnostic.severity.INFO,
+  })
+
+  local result = {}
+
+  if errors > 0 then
+    result[#result + 1] = "%#St_lspError#  " .. errors .. " "
+  end
+
+  if warnings > 0 then
+    result[#result + 1] = "%#St_lspWarning#  " .. warnings .. " "
+  end
+
+  if hints > 0 then
+    result[#result + 1] = "%#St_lspHints# 󰛩 " .. hints .. " "
+  end
+
+  if info > 0 then
+    result[#result + 1] = "%#St_lspInfo# 󰋼 " .. info .. " "
+  end
+
+  if #result == 0 then
+    return ""
+  end
+
+  return table.concat(result)
 end
 
+-- Separators
 M.separators = {
-  default = { left = "", right = "" },
-  round = { left = "", right = "" },
-  block = { left = "█", right = "█" },
-  arrow = { left = "", right = "" },
+  default = {
+    left = "",
+    right = "",
+  },
+
+  round = {
+    left = "",
+    right = "",
+  },
+
+  block = {
+    left = "█",
+    right = "█",
+  },
+
+  arrow = {
+    left = "",
+    right = "",
+  },
 }
 
-M.state = { lsp_msg = "" }
-
-local spinners = { "", "󰪞", "󰪟", "󰪠", "󰪡", "󰪢", "󰪣", "󰪤", "󰪥", "" }
+-- LSP progress
+local spinners = {
+  "",
+  "󰪞",
+  "󰪟",
+  "󰪠",
+  "󰪡",
+  "󰪢",
+  "󰪣",
+  "󰪤",
+  "󰪥",
+  "",
+}
 
 M.autocmds = function()
   vim.api.nvim_create_autocmd("LspProgress", {
     pattern = { "begin", "report", "end" },
+
     callback = function(args)
-      -- Ensure params exists before accessing its fields
       if not args.data or not args.data.params then
         return
       end
 
       local data = args.data.params.value
+
+      if not data then
+        return
+      end
+
       local progress = ""
 
       if data.percentage then
-        local idx = math.max(1, math.floor(data.percentage / 10))
-        local icon = spinners[idx]
+        local index = math.max(1, math.min(10, math.floor(data.percentage / 10) + 1))
+        local icon = spinners[index]
+
         progress = icon .. " " .. data.percentage .. "%% "
       end
 
-      local loaded_count = data.message and string.match(data.message, "^(%d+/%d+)") or ""
-      local str = progress .. (data.title or "") .. " " .. (loaded_count or "")
-      M.state.lsp_msg = data.kind == "end" and "" or str
+      local loaded_count = ""
+
+      if data.message then
+        loaded_count = string.match(data.message, "^(%d+/%d+)") or ""
+      end
+
+      local message = progress .. (data.title or "") .. " " .. loaded_count
+      M.state.lsp_msg = data.kind == "end" and "" or message
+
       vim.cmd.redrawstatus()
     end,
   })
