@@ -10,19 +10,17 @@ M.mode = function()
   local mode = vim.api.nvim_get_mode().mode
   local current = utils.modes[mode] or utils.modes.n
 
-  return "%#St_" .. current[2] .. "Mode#" .. "  " .. current[1] .. " "
+  return "%#Staline" .. current[2] .. "Mode#  " .. current[1] .. " "
 end
 
 M.file = function()
   local x = utils.file()
 
   return "%#StalineFilenameIcon#"
-    .. "%#"
-    .. "StalineDefaultFile"
-    .. "# "
-    .. x[1]
     .. " "
     .. "%#StalineFilename#"
+    .. x[1]
+    .. " "
     .. x[2]
     .. " "
 end
@@ -63,17 +61,28 @@ M.cwd = function()
   local cwd = vim.uv.cwd() or ""
   local name = cwd:match "([^/\\]+)[/\\]*$" or cwd
 
-  return "%#StalineFolderIcon# DIR " .. "%#StalineFolderText# " .. name .. " " .. "%#StalineEmptySpace#"
+  return "%#StalineFolderIcon# DIR "
+    .. "%#StalineFolderText# "
+    .. name
+    .. " "
+    .. "%#StalineEmptySpace#"
 end
 
 M.cursor = function()
   local current = vim.fn.line "."
   local total = vim.fn.line "$"
 
-  return "%#StalineProgress# " .. current .. "/" .. total .. " " .. "%#StalineProgressIcon# " .. "%#StalineEmptySpace#"
+  return "%#StalineProgress# "
+    .. current
+    .. "/"
+    .. total
+    .. " "
+    .. "%#StalineProgressIcon# "
+    .. "%#StalineEmptySpace#"
 end
 
 M["%="] = "%="
+
 return function()
   return utils.generate("blocks", M)
 end

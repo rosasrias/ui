@@ -18,8 +18,8 @@ local orders = {
   default = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cwd", "cursor" },
   minimal = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cwd", "cursor" },
   vscode = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cursor", "cwd" },
-  blocks = { "mode", "file", "git", "diff", "%=", "diagnostics", "lsp_msg", "lsp", "cwd", "cursor" },
-  fancy = { "mode", "file", "git", "diff", "%=", "diagnostics", "lsp_msg", "lsp", "cwd", "cursor" },
+  blocks = { "mode", "file", "git", "diff", "%=", "diagnostics", "lsp_msg", "cwd","lsp", "cursor" },
+  fancy = { "mode", "file", "git", "diff", "%=", "diagnostics", "lsp_msg", "cwd","lsp", "cursor" },
 }
 
 -- Generator
@@ -216,10 +216,10 @@ M.lsp = function()
   for _, client in ipairs(vim.lsp.get_clients()) do
     if client.attached_buffers and client.attached_buffers[buf] then
       if vim.o.columns > 100 then
-        return "%#St_Lsp#   LSP ~ " .. client.name .. " "
+        return "%#St_Lsp# " .. client.name .. " "
       end
 
-      return "%#St_Lsp#   LSP "
+      return "%#St_Lsp# "
     end
   end
 

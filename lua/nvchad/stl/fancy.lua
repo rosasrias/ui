@@ -10,11 +10,17 @@ M.mode = function()
   local mode = vim.api.nvim_get_mode().mode
   local current = utils.modes[mode] or utils.modes.n
 
-  local sep = "%#St_" .. current[2] .. "ModeSep# "
-
+  local sep = "%#Staline" .. current[2] .. "ModeSep# "
   local sep_two = "%#StalineModeSepTwo# "
 
-  return "%#St_" .. current[2] .. "Mode#" .. "  " .. current[1] .. " " .. sep .. sep_two .. " "
+  return "%#Staline"
+    .. current[2]
+    .. "Mode#  "
+    .. current[1]
+    .. " "
+    .. sep
+    .. sep_two
+    .. " "
 end
 
 M.file = function()
@@ -88,7 +94,7 @@ M.cwd = function()
 
   return "%#StalineFolderSep#"
     .. "%#StalineFolderIcon#"
-    .. "   "
+    .. "  "
     .. "%#StalineFolderText# "
     .. name
     .. " "
