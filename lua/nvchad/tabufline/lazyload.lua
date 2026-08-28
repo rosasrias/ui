@@ -6,18 +6,12 @@ local cur_buf = api.nvim_get_current_buf
 
 local autocmd = api.nvim_create_autocmd
 
---------------------------------------------------------------------------------
 -- Buffer storage
---------------------------------------------------------------------------------
-
 vim.t.bufs = vim.t.bufs or vim.tbl_filter(function(buf)
   return vim.fn.buflisted(buf) == 1
 end, api.nvim_list_bufs())
 
---------------------------------------------------------------------------------
 -- Buffer events
---------------------------------------------------------------------------------
-
 autocmd({ "BufAdd", "BufEnter", "tabnew" }, {
   callback = function(args)
     local bufs = vim.t.bufs
@@ -47,10 +41,7 @@ autocmd({ "BufAdd", "BufEnter", "tabnew" }, {
   end,
 })
 
---------------------------------------------------------------------------------
 -- Buffer deletion
---------------------------------------------------------------------------------
-
 autocmd("BufDelete", {
   callback = function(args)
     for _, tab in ipairs(api.nvim_list_tabpages()) do
@@ -75,10 +66,7 @@ autocmd("BufDelete", {
   end,
 })
 
---------------------------------------------------------------------------------
 -- Lazy loading
---------------------------------------------------------------------------------
-
 if opts.lazyload then
   api.nvim_create_autocmd({
     "BufNew",
@@ -110,9 +98,7 @@ else
   dofile(vim.g.base46_cache .. "tbline")
 end
 
---------------------------------------------------------------------------------
 -- Quickfix
---------------------------------------------------------------------------------
 
 autocmd("FileType", {
   pattern = "qf",
