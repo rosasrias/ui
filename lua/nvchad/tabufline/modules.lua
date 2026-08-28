@@ -15,9 +15,7 @@ local opts = require("nvconfig").ui.tabufline
 
 local M = {}
 
---------------------------------------------------------------------------------
 -- Callback registration
---------------------------------------------------------------------------------
 
 local function register_callbacks()
   if vim.g.nvchad_tabufline_callbacks then
@@ -75,10 +73,7 @@ end
 
 register_callbacks()
 
---------------------------------------------------------------------------------
 -- Tree width
---------------------------------------------------------------------------------
-
 local function get_tree_width()
   for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
     local buf = api.nvim_win_get_buf(win)
@@ -91,10 +86,7 @@ local function get_tree_width()
   return 0
 end
 
---------------------------------------------------------------------------------
 -- Buffer data
---------------------------------------------------------------------------------
-
 local function get_buffer_data()
   local buffers = {}
 
@@ -110,10 +102,7 @@ local function get_buffer_data()
   return buffers
 end
 
---------------------------------------------------------------------------------
 -- Tree offset
---------------------------------------------------------------------------------
-
 M.treeOffset = function()
   local width = get_tree_width()
 
@@ -124,10 +113,7 @@ M.treeOffset = function()
   return "%#NvimTreeNormal#" .. strep(" ", width) .. "%#NvimTreeWinSeparator#│"
 end
 
---------------------------------------------------------------------------------
 -- Buffers
---------------------------------------------------------------------------------
-
 M.buffers = function()
   local buffers = get_buffer_data()
   local total = #buffers
@@ -141,10 +127,8 @@ M.buffers = function()
 
   local tree_width = get_tree_width()
 
-  -------------------------------------------------------------------------------
   -- Reserve space for:
   -- tree + scroll + right-side modules
-  -------------------------------------------------------------------------------
 
   local scroll_space = 4
   local right_space = 12
@@ -187,10 +171,7 @@ M.buffers = function()
   }
 end
 
---------------------------------------------------------------------------------
 -- Tabs
---------------------------------------------------------------------------------
-
 M.tabs = function()
   local tabs = fn.tabpagenr "$"
 
@@ -211,52 +192,34 @@ M.tabs = function()
   return table.concat(result)
 end
 
---------------------------------------------------------------------------------
 -- Run
---------------------------------------------------------------------------------
-
 M.run = function()
   local icon = vim.bo.filetype == "html" and "󰀂" or ""
 
   return btn(" " .. icon .. " ", "BuffLineRun", "TbRun")
 end
 
---------------------------------------------------------------------------------
 -- Split
---------------------------------------------------------------------------------
-
 M.split = function()
   return btn("  ", "BuffLineSplit", "TbSplit")
 end
 
---------------------------------------------------------------------------------
 -- Transparency
---------------------------------------------------------------------------------
-
 M.transparency = function()
   return btn(" 󱡓 ", "BufflineTrans", "TbToggleTransparency")
 end
 
---------------------------------------------------------------------------------
 -- Theme
---------------------------------------------------------------------------------
-
 M.theme_toggle = function()
   return btn(" 󱥚 ", "BuffLineToggleTheme", "TbToggleTheme")
 end
 
---------------------------------------------------------------------------------
 -- Close all
---------------------------------------------------------------------------------
-
 M.close_all = function()
   return btn(" 󰅗 ", "BufflineCloseButton", "TbCloseAllBufs")
 end
 
---------------------------------------------------------------------------------
 -- Render
---------------------------------------------------------------------------------
-
 return function()
   if opts.modules then
     for key, value in pairs(opts.modules) do
