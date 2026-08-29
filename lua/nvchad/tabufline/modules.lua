@@ -232,7 +232,7 @@ M.theme_toggle = function()
     return ""
   end
 
-  return btn(" 󱥚 ", "BuffLineToggleTheme", "TbToggleTheme")
+  return btn(" 󱥚  ", "BuffLineToggleTheme", "TbToggleTheme")
 end
 
 -- Close all

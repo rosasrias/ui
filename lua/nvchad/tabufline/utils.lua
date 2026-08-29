@@ -145,12 +145,18 @@ M.style_buf = function(nr, index, width)
   if modified then
     close_btn = M.txt("  ", is_current and "BufOnModified" or "BufOffModified")
   else
-    close_btn = M.btn(" 󰅖 ", nil, "TbKillBuf", nr)
+    local close_hl = is_current and "KillBufOn" or "KillBufOff"
+    close_btn = M.btn(
+      " 󰅖 ",
+      close_hl,
+      "TbKillBuf",
+      nr
+    )
   end
 
   content = M.btn(content, nil, "TbGoToBuf", nr)
 
-  return M.txt(content .. close_btn, tb_hl_name)
+ return M.txt(content .. close_btn, tb_hl_name)
 end
 
 return M
