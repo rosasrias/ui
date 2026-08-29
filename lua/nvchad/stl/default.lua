@@ -48,7 +48,7 @@ end
 M.diagnostics = utils.diagnostics
 
 M.lsp = function()
-  return utils.lsp()
+  return "%#St_Lsp# " .. " LSP ~" .. utils.lsp()
 end
 
 M.cwd = function()

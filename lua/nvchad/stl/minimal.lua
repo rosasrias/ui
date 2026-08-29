@@ -56,8 +56,8 @@ end
 M.diagnostics = utils.diagnostics
 
 M.lsp = function()
-  return "%#St_Lsp#" .. utils.lsp()
-end
+   return "%#St_Lsp# " .. " LSP ~" .. utils.lsp()
+ end
 
 M.cwd = function()
   local cwd = vim.uv.cwd() or ""

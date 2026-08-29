@@ -18,8 +18,8 @@ local orders = {
   default = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cwd", "cursor" },
   minimal = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cwd", "cursor" },
   vscode = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cursor", "cwd" },
-  blocks = { "mode", "file", "git", "diff", "%=", "diagnostics", "lsp_msg", "cwd","lsp", "cursor" },
-  fancy = { "mode", "file", "git", "diff", "%=", "diagnostics", "lsp_msg", "cwd","lsp", "cursor" },
+  blocks = { "mode", "file", "git", "diff", "%=", "diagnostics", "cwd","lsp", "cursor" },
+  fancy = { "mode", "file", "git", "diff", "%=", "diagnostics", "cwd","lsp", "cursor" },
 }
 
 -- Generator

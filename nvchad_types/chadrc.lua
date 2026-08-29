@@ -82,7 +82,7 @@
 ---@class NvStatusLineConfig
 ---@field enabled? boolean
 --- statusline theme
----@field theme? '"default"'|'"vscode"'|'"vscode_colored"'|'"minimal"'
+---@field theme? '"default"'|'"vscode"'|'"vscode_colored"'|'"minimal"'|'"fancy"'|'"blocks"'
 --- Separator style for NvChad Statusline
 ---     - Only when the *theme* is `minimal`, "round" or "block" will be having effect
 ---@field separator_style? '"default"'|'"round"'|'"block"'|'"arrow"'|{ left: string, right: string }

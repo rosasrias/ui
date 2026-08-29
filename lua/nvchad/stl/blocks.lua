@@ -50,11 +50,12 @@ end
 M.lsp = function()
   local value = utils.lsp()
 
-  if value == "" then
-    return ""
-  end
+  value = value:gsub("%%#St_Lsp#", "")
 
-  return value
+  return "%#StalineLspIcon# LSP "
+    .. "%#StalineLspText#"
+    .. value
+    .. "%#StalineEmptySpace#"
 end
 
 M.cwd = function()
