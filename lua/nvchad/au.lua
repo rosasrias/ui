@@ -1,19 +1,6 @@
 local autocmd = vim.api.nvim_create_autocmd
 local config = require "nvconfig"
 
--- load nvdash only on empty file
-if config.nvdash.load_on_startup then
-  local opening_file = vim.api.nvim_buf_get_name(0)
-  local is_dir = vim.fn.isdirectory(opening_file) == 1
-  local bufmodifed = vim.api.nvim_get_option_value("modified", { buf = 0 })
-
-  if not bufmodifed and (is_dir or opening_file == "") then
-    local current_buffer = vim.api.nvim_get_current_buf()
-    require("nvchad.nvdash").open()
-    vim.api.nvim_buf_delete(current_buffer, { force = true, unload = false })
-  end
-end
-
 if config.lsp.signature then
   autocmd("LspAttach", {
     callback = function(args)

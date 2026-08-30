@@ -7,6 +7,19 @@ if config.ui.statusline.enabled then
   require("nvchad.stl.utils").autocmds()
 end
 
+-- load nvdash on startup (sync, before first frame, avoids flashing a blank buffer)
+if config.nvdash.load_on_startup then
+  local opening_file = api.nvim_buf_get_name(0)
+  local is_dir = vim.fn.isdirectory(opening_file) == 1
+  local bufmodifed = api.nvim_get_option_value("modified", { buf = 0 })
+
+  if not bufmodifed and (is_dir or opening_file == "") then
+    local current_buffer = api.nvim_get_current_buf()
+    require("nvchad.nvdash").open()
+    api.nvim_buf_delete(current_buffer, { force = true, unload = false })
+  end
+end
+
 if config.ui.tabufline.enabled then
   require "nvchad.tabufline.lazyload"
 end
