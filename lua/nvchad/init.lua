@@ -7,17 +7,22 @@ if config.ui.statusline.enabled then
   require("nvchad.stl.utils").autocmds()
 end
 
--- load nvdash on startup (sync, before first frame, avoids flashing a blank buffer)
+-- load nvdash on startup via VimEnter: runs after options.lua (so window-local
+-- opts like 'number' are not clobbered) but before the first frame is drawn
 if config.nvdash.load_on_startup then
-  local opening_file = api.nvim_buf_get_name(0)
-  local is_dir = vim.fn.isdirectory(opening_file) == 1
-  local bufmodifed = api.nvim_get_option_value("modified", { buf = 0 })
+  api.nvim_create_autocmd("VimEnter", {
+    callback = function()
+      local opening_file = api.nvim_buf_get_name(0)
+      local is_dir = vim.fn.isdirectory(opening_file) == 1
+      local bufmodifed = api.nvim_get_option_value("modified", { buf = 0 })
 
-  if not bufmodifed and (is_dir or opening_file == "") then
-    local current_buffer = api.nvim_get_current_buf()
-    require("nvchad.nvdash").open()
-    api.nvim_buf_delete(current_buffer, { force = true, unload = false })
-  end
+      if not bufmodifed and (is_dir or opening_file == "") then
+        local current_buffer = api.nvim_get_current_buf()
+        require("nvchad.nvdash").open()
+        api.nvim_buf_delete(current_buffer, { force = true, unload = false })
+      end
+    end,
+  })
 end
 
 if config.ui.tabufline.enabled then
