@@ -1,5 +1,7 @@
 local M = {}
-local ui = require("nvconfig").ui.cmp
+local nvconfig = require "nvconfig"
+local ui = nvconfig.ui.cmp
+local transparency = nvconfig.base46.transparency
 local atom_styled = ui.style == "atom" or ui.style == "atom_colored"
 
 local menu_cols
@@ -30,9 +32,17 @@ M.components = {
   },
 }
 
+-- border logic mirrors nvchad/cmp/styles.lua: transparent => rounded even for atom
+local border_style
+if transparency then
+  border_style = "rounded"
+else
+  border_style = atom_styled and "none" or "single"
+end
+
 M.menu = {
   scrollbar = false,
-  border = atom_styled and "none" or "single",
+  border = border_style,
   draw = {
     padding = { atom_styled and 0 or 1, 1 },
     columns = menu_cols,
