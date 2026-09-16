@@ -95,7 +95,16 @@ else
 
   vim.o.tabline = "%!v:lua.require('nvchad.tabufline.modules')()"
 
-  dofile(vim.g.base46_cache .. "tbline")
+  -- defer tbline reload to VimEnter so it runs after init.lua's defaults
+  -- (fixes purple TabLine flash when transparency is enabled on startup)
+  vim.api.nvim_create_autocmd("VimEnter", {
+    once = true,
+    callback = function()
+      pcall(dofile, vim.g.base46_cache .. "tbline")
+    end,
+  })
+
+  pcall(dofile, vim.g.base46_cache .. "tbline")
 end
 
 -- Quickfix
