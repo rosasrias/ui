@@ -220,6 +220,13 @@ M.open = function(buf, win, action)
 
   require("nvchad.utils").set_cleanbuf_opts("nvdash", buf)
 
+  -- Hide tabufline while dashboard is visible (removes #252931 / TbFill stripe)
+  if require("nvconfig").ui.tabufline.enabled then
+    vim.g._nvdash_tabline = vim.o.showtabline
+    vim.o.showtabline = 0
+    vim.cmd.redrawtabline()
+  end
+
   ----------------------- autocmds -----------------------------
   local group_id = api.nvim_create_augroup("NvdashAu", { clear = true })
 
@@ -228,6 +235,11 @@ M.open = function(buf, win, action)
     buffer = buf,
     callback = function()
       vim.g.nvdash_displayed = false
+      if vim.g._nvdash_tabline ~= nil then
+        vim.o.showtabline = vim.g._nvdash_tabline
+        vim.g._nvdash_tabline = nil
+        vim.cmd.redrawtabline()
+      end
       api.nvim_del_augroup_by_name "NvdashAu"
     end,
   })

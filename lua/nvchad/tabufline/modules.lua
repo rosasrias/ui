@@ -73,9 +73,13 @@ end
 
 register_callbacks()
 
--- Hide the right-side action buttons while the dashboard is shown
+-- Hide tabufline contents while dashboard or cheatsheet is shown
 local function dashboard_active()
-  return vim.g.nvdash_displayed == true
+  return vim.g.nvdash_displayed == true or vim.g.nvcheatsheet_displayed == true
+end
+
+local function overlay_active()
+  return dashboard_active()
 end
 
 -- Tree width
@@ -109,6 +113,10 @@ end
 
 -- Tree offset
 M.treeOffset = function()
+  if overlay_active() then
+    return ""
+  end
+
   local width = get_tree_width()
 
   if width == 0 then
@@ -120,6 +128,10 @@ end
 
 -- Buffers
 M.buffers = function()
+  if overlay_active() then
+    return ""
+  end
+
   local buffers = get_buffer_data()
   local total = #buffers
 
@@ -178,6 +190,10 @@ end
 
 -- Tabs
 M.tabs = function()
+  if overlay_active() then
+    return ""
+  end
+
   local tabs = fn.tabpagenr "$"
 
   if tabs <= 1 then
@@ -246,6 +262,10 @@ end
 
 -- Render
 return function()
+  if overlay_active() then
+    return ""
+  end
+
   if opts.modules then
     for key, value in pairs(opts.modules) do
       M[key] = value
