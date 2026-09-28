@@ -241,7 +241,7 @@ M.close_all = function()
     return ""
   end
 
-  return btn(" 󰅗 ", "BufflineCloseButton", "TbCloseAllBufs")
+  return btn("  ", "BufflineCloseButton", "TbCloseAllBufs")
 end
 
 -- Render
