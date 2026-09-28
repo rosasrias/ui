@@ -222,7 +222,6 @@ M.open = function(buf, win, action)
 
   -- Hide tabufline while dashboard is visible (removes #252931 / TbFill stripe)
   if require("nvconfig").ui.tabufline.enabled then
-    vim.g._nvdash_tabline = vim.o.showtabline
     vim.o.showtabline = 0
     vim.cmd.redrawtabline()
   end
@@ -235,11 +234,40 @@ M.open = function(buf, win, action)
     buffer = buf,
     callback = function()
       vim.g.nvdash_displayed = false
-      if vim.g._nvdash_tabline ~= nil then
-        vim.o.showtabline = vim.g._nvdash_tabline
-        vim.g._nvdash_tabline = nil
+      -- Defer restore to next tick to avoid race with Telescope/file open:
+      -- ensures vim.t.bufs / getbufinfo is updated and tbline highlights are loaded
+      -- before redrawing, preventing "pegado a la izquierda" y flash rojo del boton X
+      vim.schedule(function()
+        pcall(dofile, vim.g.base46_cache .. "tbline")
+        local cfg = require("nvconfig").ui.tabufline
+        if not cfg.enabled then
+          vim.o.showtabline = 0
+        elseif cfg.lazyload then
+          local nb = #vim.fn.getbufinfo { buflisted = 1 }
+          local nt = #vim.api.nvim_list_tabpages()
+          if nb >= 2 or nt >= 2 then
+            vim.o.showtabline = 2
+            vim.o.tabline = "%!v:lua.require('nvchad.tabufline.modules')()"
+          else
+            -- keep hidden until lazyload condition met (evita flash con 1 buffer)
+            -- si solo hay 1 buffer tras abrir archivo, mostrar igual para evitar parpadeo
+            -- cuando se viene de nvdash: forzar 2 si hay al menos 1 buffer listado
+            if nb >= 1 then
+              vim.o.showtabline = 2
+              vim.o.tabline = "%!v:lua.require('nvchad.tabufline.modules')()"
+            else
+              vim.o.showtabline = 0
+            end
+          end
+        else
+          vim.o.showtabline = 2
+          vim.o.tabline = "%!v:lua.require('nvchad.tabufline.modules')()"
+        end
+        pcall(function()
+          require("nvchad.tabufline.state").ensure()
+        end)
         vim.cmd.redrawtabline()
-      end
+      end)
       api.nvim_del_augroup_by_name "NvdashAu"
     end,
   })
