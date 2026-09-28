@@ -221,8 +221,12 @@ M.open = function(buf, win, action)
   require("nvchad.utils").set_cleanbuf_opts("nvdash", buf)
 
   -- Hide tabufline while dashboard is visible (removes #252931 / TbFill stripe)
+  -- Solo devolvemos "" en modules.lua (overlay_active) y ocultamos highlights,
+  -- sin tocar showtabline para no interferir con Telescope (<CR> requiere doble enter)
   if require("nvconfig").ui.tabufline.enabled then
-    vim.o.showtabline = 0
+    -- Hacer transparente el fill para que no se vea la franja #252931 mientras modules.lua devuelve ""
+    vim.api.nvim_set_hl(0, "TbFill", { bg = "NONE" })
+    pcall(vim.api.nvim_set_hl, 0, "TabLineFill", { bg = "NONE" })
     vim.cmd.redrawtabline()
   end
 
@@ -234,35 +238,10 @@ M.open = function(buf, win, action)
     buffer = buf,
     callback = function()
       vim.g.nvdash_displayed = false
-      -- Defer restore to next tick to avoid race with Telescope/file open:
-      -- ensures vim.t.bufs / getbufinfo is updated and tbline highlights are loaded
-      -- before redrawing, preventing "pegado a la izquierda" y flash rojo del boton X
+      -- Restaurar highlights de tbline en el siguiente tick, sin tocar showtabline/tabline
+      -- evita race con Telescope y el flash rojo/pegado a la izquierda
       vim.schedule(function()
         pcall(dofile, vim.g.base46_cache .. "tbline")
-        local cfg = require("nvconfig").ui.tabufline
-        if not cfg.enabled then
-          vim.o.showtabline = 0
-        elseif cfg.lazyload then
-          local nb = #vim.fn.getbufinfo { buflisted = 1 }
-          local nt = #vim.api.nvim_list_tabpages()
-          if nb >= 2 or nt >= 2 then
-            vim.o.showtabline = 2
-            vim.o.tabline = "%!v:lua.require('nvchad.tabufline.modules')()"
-          else
-            -- keep hidden until lazyload condition met (evita flash con 1 buffer)
-            -- si solo hay 1 buffer tras abrir archivo, mostrar igual para evitar parpadeo
-            -- cuando se viene de nvdash: forzar 2 si hay al menos 1 buffer listado
-            if nb >= 1 then
-              vim.o.showtabline = 2
-              vim.o.tabline = "%!v:lua.require('nvchad.tabufline.modules')()"
-            else
-              vim.o.showtabline = 0
-            end
-          end
-        else
-          vim.o.showtabline = 2
-          vim.o.tabline = "%!v:lua.require('nvchad.tabufline.modules')()"
-        end
         pcall(function()
           require("nvchad.tabufline.state").ensure()
         end)

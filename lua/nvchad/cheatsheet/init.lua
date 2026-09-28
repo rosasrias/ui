@@ -73,7 +73,8 @@ M.autocmds = function(buf)
 
   -- Hide tabufline while cheatsheet is visible (same as dashboard)
   if config.ui.tabufline.enabled then
-    vim.o.showtabline = 0
+    vim.api.nvim_set_hl(0, "TbFill", { bg = "NONE" })
+    pcall(vim.api.nvim_set_hl, 0, "TabLineFill", { bg = "NONE" })
     vim.cmd.redrawtabline()
   end
 
@@ -86,27 +87,6 @@ M.autocmds = function(buf)
       vim.g.nvcheatsheet_displayed = false
       vim.schedule(function()
         pcall(dofile, vim.g.base46_cache .. "tbline")
-        local cfg = require("nvconfig").ui.tabufline
-        if not cfg.enabled then
-          vim.o.showtabline = 0
-        elseif cfg.lazyload then
-          local nb = #vim.fn.getbufinfo { buflisted = 1 }
-          local nt = #vim.api.nvim_list_tabpages()
-          if nb >= 2 or nt >= 2 then
-            vim.o.showtabline = 2
-            vim.o.tabline = "%!v:lua.require('nvchad.tabufline.modules')()"
-          else
-            if nb >= 1 then
-              vim.o.showtabline = 2
-              vim.o.tabline = "%!v:lua.require('nvchad.tabufline.modules')()"
-            else
-              vim.o.showtabline = 0
-            end
-          end
-        else
-          vim.o.showtabline = 2
-          vim.o.tabline = "%!v:lua.require('nvchad.tabufline.modules')()"
-        end
         pcall(function()
           require("nvchad.tabufline.state").ensure()
         end)
