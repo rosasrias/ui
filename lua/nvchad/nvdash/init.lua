@@ -238,16 +238,14 @@ M.open = function(buf, win, action)
     buffer = buf,
     callback = function()
       vim.g.nvdash_displayed = false
-      -- Restaurar highlights de tbline en el siguiente tick, sin tocar showtabline/tabline
-      -- evita race con Telescope y el flash rojo/pegado a la izquierda
-      vim.schedule(function()
-        pcall(dofile, vim.g.base46_cache .. "tbline")
-        pcall(function()
-          require("nvchad.tabufline.state").ensure()
-        end)
-        vim.cmd.redrawtabline()
-      end)
       api.nvim_del_augroup_by_name "NvdashAu"
+      -- Restaurar highlights de forma síncrona (sin schedule) para no romper
+      -- Telescope find_files / oldfiles que requieren solo un <CR>
+      pcall(dofile, vim.g.base46_cache .. "tbline")
+      pcall(function()
+        require("nvchad.tabufline.state").ensure()
+      end)
+      vim.cmd.redrawtabline()
     end,
   })
 

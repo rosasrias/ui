@@ -85,14 +85,12 @@ M.autocmds = function(buf)
     buffer = buf,
     callback = function()
       vim.g.nvcheatsheet_displayed = false
-      vim.schedule(function()
-        pcall(dofile, vim.g.base46_cache .. "tbline")
-        pcall(function()
-          require("nvchad.tabufline.state").ensure()
-        end)
-        vim.cmd.redrawtabline()
-      end)
       api.nvim_del_augroup_by_name "NvCh"
+      pcall(dofile, vim.g.base46_cache .. "tbline")
+      pcall(function()
+        require("nvchad.tabufline.state").ensure()
+      end)
+      vim.cmd.redrawtabline()
     end,
   })
 
