@@ -73,9 +73,9 @@ end
 
 register_callbacks()
 
--- Hide the right-side action buttons while the dashboard is shown
+-- Hide the right-side action buttons while dashboard or cheatsheet is shown
 local function dashboard_active()
-  return vim.g.nvdash_displayed == true
+  return vim.g.nvdash_displayed == true or vim.g.nvcheatsheet_displayed == true
 end
 
 -- Tree width
