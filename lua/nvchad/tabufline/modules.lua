@@ -73,9 +73,20 @@ end
 
 register_callbacks()
 
--- Hide tabufline contents while dashboard or cheatsheet is shown
+-- Hide tabufline when dashboard or cheatsheet is shown
+-- Usa filetype check además de la flag global para no depender de BufWinLeave
+-- (evita el doble <CR> en Telescope) y cubre nvdash/nvcheatsheet
+local function is_overlay_ft()
+  local cur = api.nvim_get_current_buf()
+  if not api.nvim_buf_is_valid(cur) then
+    return false
+  end
+  local ok, ft = pcall(api.nvim_get_option_value, "filetype", { buf = cur })
+  return ok and (ft == "nvdash" or ft == "nvcheatsheet")
+end
+
 local function dashboard_active()
-  return vim.g.nvdash_displayed == true or vim.g.nvcheatsheet_displayed == true
+  return vim.g.nvdash_displayed == true or vim.g.nvcheatsheet_displayed == true or is_overlay_ft()
 end
 
 local function overlay_active()
@@ -129,7 +140,7 @@ end
 -- Buffers
 M.buffers = function()
   if overlay_active() then
-    return ""
+    return "%#Normal#"
   end
 
   local buffers = get_buffer_data()
@@ -263,7 +274,8 @@ end
 -- Render
 return function()
   if overlay_active() then
-    return ""
+    -- Usar Normal para que la barra no muestre #252931 (TbFill) mientras está en overlay
+    return "%#Normal#"
   end
 
   if opts.modules then

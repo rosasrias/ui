@@ -71,28 +71,14 @@ end
 M.autocmds = function(buf)
   require("nvchad.utils").set_cleanbuf_opts("nvcheatsheet", buf)
 
-  -- Hide tabufline while cheatsheet is visible (same as dashboard)
-  if config.ui.tabufline.enabled then
-    vim.api.nvim_set_hl(0, "TbFill", { bg = "NONE" })
-    pcall(vim.api.nvim_set_hl, 0, "TabLineFill", { bg = "NONE" })
-    vim.cmd.redrawtabline()
-  end
-
   local group_id = api.nvim_create_augroup("NvCh", { clear = true })
 
   api.nvim_create_autocmd("BufWinLeave", {
     group = group_id,
     buffer = buf,
     callback = function()
+      vim.g.nvcheatsheet_displayed = false
       api.nvim_del_augroup_by_name "NvCh"
-      vim.defer_fn(function()
-        vim.g.nvcheatsheet_displayed = false
-        pcall(dofile, vim.g.base46_cache .. "tbline")
-        pcall(function()
-          require("nvchad.tabufline.state").ensure()
-        end)
-        vim.cmd.redrawtabline()
-      end, 30)
     end,
   })
 
