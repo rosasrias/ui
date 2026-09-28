@@ -73,23 +73,9 @@ end
 
 register_callbacks()
 
--- Hide tabufline buttons on nvdash/cheatsheet and make stripe blend with bg
--- Usa filetype además de la flag para no depender de autocmds que rompían Telescope
-local function is_overlay_ft()
-  local cur = api.nvim_get_current_buf()
-  if not api.nvim_buf_is_valid(cur) then
-    return false
-  end
-  local ok, ft = pcall(api.nvim_get_option_value, "filetype", { buf = cur })
-  return ok and (ft == "nvdash" or ft == "nvcheatsheet")
-end
-
+-- Hide the right-side action buttons while dashboard or cheatsheet is shown
 local function dashboard_active()
-  return vim.g.nvdash_displayed == true or vim.g.nvcheatsheet_displayed == true or is_overlay_ft()
-end
-
-local function overlay_active()
-  return dashboard_active()
+  return vim.g.nvdash_displayed == true or vim.g.nvcheatsheet_displayed == true
 end
 
 -- Tree width
@@ -123,10 +109,6 @@ end
 
 -- Tree offset
 M.treeOffset = function()
-  if overlay_active() then
-    return ""
-  end
-
   local width = get_tree_width()
 
   if width == 0 then
@@ -138,10 +120,6 @@ end
 
 -- Buffers
 M.buffers = function()
-  if overlay_active() then
-    return "%#Normal#"
-  end
-
   local buffers = get_buffer_data()
   local total = #buffers
 
@@ -200,10 +178,6 @@ end
 
 -- Tabs
 M.tabs = function()
-  if overlay_active() then
-    return ""
-  end
-
   local tabs = fn.tabpagenr "$"
 
   if tabs <= 1 then
@@ -272,10 +246,6 @@ end
 
 -- Render
 return function()
-  if overlay_active() then
-    return "%#Normal#"
-  end
-
   if opts.modules then
     for key, value in pairs(opts.modules) do
       M[key] = value
