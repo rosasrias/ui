@@ -237,15 +237,29 @@ M.open = function(buf, win, action)
     group = group_id,
     buffer = buf,
     callback = function()
-      vim.g.nvdash_displayed = false
+      -- Diferir el clear y restore hasta el siguiente BufEnter para mantener
+      -- tabufline oculto durante la transición Telescope -> file
+      -- evita parpadeo (pegado izquierda + flash rojo) y doble <CR>/click
+      api.nvim_create_autocmd("BufEnter", {
+        once = true,
+        callback = function()
+          vim.g.nvdash_displayed = false
+          pcall(dofile, vim.g.base46_cache .. "tbline")
+          pcall(function()
+            require("nvchad.tabufline.state").ensure()
+          end)
+          vim.cmd.redrawtabline()
+        end,
+      })
+      -- Fallback por si no hay BufEnter (ej. :Nvdash toggle sin abrir archivo)
+      vim.defer_fn(function()
+        if vim.g.nvdash_displayed then
+          vim.g.nvdash_displayed = false
+          pcall(dofile, vim.g.base46_cache .. "tbline")
+          vim.cmd.redrawtabline()
+        end
+      end, 500)
       api.nvim_del_augroup_by_name "NvdashAu"
-      -- Restaurar highlights de forma síncrona (sin schedule) para no romper
-      -- Telescope find_files / oldfiles que requieren solo un <CR>
-      pcall(dofile, vim.g.base46_cache .. "tbline")
-      pcall(function()
-        require("nvchad.tabufline.state").ensure()
-      end)
-      vim.cmd.redrawtabline()
     end,
   })
 
