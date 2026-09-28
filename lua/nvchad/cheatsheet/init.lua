@@ -84,25 +84,15 @@ M.autocmds = function(buf)
     group = group_id,
     buffer = buf,
     callback = function()
-      api.nvim_create_autocmd("BufEnter", {
-        once = true,
-        callback = function()
-          vim.g.nvcheatsheet_displayed = false
-          pcall(dofile, vim.g.base46_cache .. "tbline")
-          pcall(function()
-            require("nvchad.tabufline.state").ensure()
-          end)
-          vim.cmd.redrawtabline()
-        end,
-      })
-      vim.defer_fn(function()
-        if vim.g.nvcheatsheet_displayed then
-          vim.g.nvcheatsheet_displayed = false
-          pcall(dofile, vim.g.base46_cache .. "tbline")
-          vim.cmd.redrawtabline()
-        end
-      end, 500)
       api.nvim_del_augroup_by_name "NvCh"
+      vim.defer_fn(function()
+        vim.g.nvcheatsheet_displayed = false
+        pcall(dofile, vim.g.base46_cache .. "tbline")
+        pcall(function()
+          require("nvchad.tabufline.state").ensure()
+        end)
+        vim.cmd.redrawtabline()
+      end, 30)
     end,
   })
 

@@ -237,35 +237,41 @@ M.open = function(buf, win, action)
     group = group_id,
     buffer = buf,
     callback = function()
-      -- Diferir el clear y restore hasta el siguiente BufEnter para mantener
-      -- tabufline oculto durante la transición Telescope -> file
-      -- evita parpadeo (pegado izquierda + flash rojo) y doble <CR>/click
-      api.nvim_create_autocmd("BufEnter", {
-        once = true,
-        callback = function()
-          vim.g.nvdash_displayed = false
-          pcall(dofile, vim.g.base46_cache .. "tbline")
-          pcall(function()
-            require("nvchad.tabufline.state").ensure()
-          end)
-          vim.cmd.redrawtabline()
-        end,
-      })
-      -- Fallback por si no hay BufEnter (ej. :Nvdash toggle sin abrir archivo)
-      vim.defer_fn(function()
-        if vim.g.nvdash_displayed then
-          vim.g.nvdash_displayed = false
-          pcall(dofile, vim.g.base46_cache .. "tbline")
-          vim.cmd.redrawtabline()
-        end
-      end, 500)
       api.nvim_del_augroup_by_name "NvdashAu"
+      -- Defer 30ms para mantener tabline oculto mientras Telescope hace `edit`
+      -- evita flicker pegado/flash rojo sin bloquear el primer <CR>
+      vim.defer_fn(function()
+        vim.g.nvdash_displayed = false
+        pcall(dofile, vim.g.base46_cache .. "tbline")
+        pcall(function()
+          require("nvchad.tabufline.state").ensure()
+        end)
+        vim.cmd.redrawtabline()
+      end, 30)
     end,
   })
 
   api.nvim_create_autocmd({ "WinResized", "VimResized" }, {
     group = group_id,
     callback = function()
+      -- No redibujar nvdash mientras Telescope está abierto (evita doble <CR>)
+      local ok, _ = pcall(require, "telescope")
+      if ok then
+        local ok_state, state = pcall(require, "telescope.state")
+        if ok_state and state.get_status then
+          local status = state.get_status(vim.api.nvim_get_current_buf())
+          if status and status.picker then
+            return
+          end
+        end
+        -- fallback: si hay ventana con filetype TelescopePrompt, skip
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+          local b = vim.api.nvim_win_get_buf(win)
+          if vim.bo[b].filetype == "TelescopePrompt" then
+            return
+          end
+        end
+      end
       vim.bo[vim.g.nvdash_buf].ma = true
       require("nvchad.nvdash").open(vim.g.nvdash_buf, vim.g.nvdash_win, "redraw")
     end,
