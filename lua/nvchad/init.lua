@@ -2,6 +2,28 @@ local api = vim.api
 local config = require "nvconfig"
 local new_cmd = api.nvim_create_user_command
 
+-- keep lazy.nvim's window border consistent with transparency:
+-- rounded when transparency is on, otherwise keep lazy's default (none)
+local function lazy_border()
+  return config.base46.transparency and "rounded" or "none"
+end
+
+local function sync_lazy_border()
+  local ok, lazy_config = pcall(require, "lazy.core.config")
+
+  if ok and lazy_config.options and lazy_config.options.ui then
+    lazy_config.options.ui.border = lazy_border()
+  end
+end
+
+sync_lazy_border()
+
+api.nvim_create_autocmd("User", {
+  pattern = "NvThemeReload",
+  group = api.nvim_create_augroup("NvChadLazyBorder", { clear = true }),
+  callback = sync_lazy_border,
+})
+
 if config.ui.statusline.enabled then
   vim.o.statusline = "%!v:lua.require('nvchad.stl." .. config.ui.statusline.theme .. "')()"
   require("nvchad.stl.utils").autocmds()
