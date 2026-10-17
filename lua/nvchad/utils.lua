@@ -35,6 +35,31 @@ M.replace_word = function(old, new, filepath)
   end
 end
 
+-- inserts a line right after the first line matching the anchor pattern
+-- (used to add missing keys, e.g. transparency, into chadrc's base46 table)
+M.insert_line = function(anchor, line, filepath)
+  filepath = filepath or vim.fn.stdpath "config" .. "/lua/" .. "chadrc.lua"
+
+  local file = io.open(filepath, "r")
+  if not file then
+    return
+  end
+
+  local content = file:read "*all"
+  local pattern = "([^\n]*" .. anchor .. "[^\n]*\n)"
+  file:close()
+
+  if not content:match(pattern) then
+    return
+  end
+
+  content = content:gsub(pattern, "%1" .. line .. "\n", 1)
+
+  file = io.open(filepath, "w")
+  file:write(content)
+  file:close()
+end
+
 M.set_cleanbuf_opts = function(ft, buf)
   opt_local("buflisted", false, { buf = buf })
   opt_local("modifiable", false, { buf = buf })
