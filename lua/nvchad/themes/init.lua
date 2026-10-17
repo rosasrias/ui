@@ -35,6 +35,10 @@ M.open = function(opts)
 
   local style = state.style
 
+  -- match the rest of the UI: rounded border with transparency, single otherwise
+  local transparency = require("nvconfig").base46.transparency
+  local win_border = transparency and "rounded" or "single"
+
   state.icons.user = opts.icon
   state.icon = state.icons.user or state.icons[style]
 
@@ -73,7 +77,7 @@ M.open = function(opts)
     height = 1,
     relative = "editor",
     style = "minimal",
-    border = "single",
+    border = win_border,
   }
 
   if style == "flat" or style == "bordered" then
@@ -89,14 +93,19 @@ M.open = function(opts)
     height = ((style == "flat" or style == "bordered") and h + 2) or h,
     relative = "win",
     style = "minimal",
-    border = "single",
+    border = win_border,
   })
 
   vim.bo[state.input_buf].buftype = "prompt"
   vim.fn.prompt_setprompt(state.input_buf, state.prompt)
   vim.cmd "startinsert"
 
-  if opts.border then
+  if transparency then
+    -- match cmp/hover_doc: transparent background + grey rounded border
+    vim.wo[state.input_win].winhl = "Normal:Normal,FloatBorder:FloatBorder"
+    api.nvim_set_hl(state.ns, "Normal", { link = "Normal" })
+    api.nvim_set_hl(state.ns, "FloatBorder", { fg = colors.grey, bg = "NONE" })
+  elseif opts.border then
     api.nvim_set_hl(state.ns, "FloatBorder", { link = "Comment" })
     api.nvim_set_hl(state.ns, "Normal", { link = "Normal" })
     vim.wo[state.input_win].winhl = "Normal:Normal"
