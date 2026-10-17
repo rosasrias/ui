@@ -11,11 +11,12 @@ end
 M.compact = function()
   local result = {}
   local list = state.themes_shown
+  local transparency = require("nvconfig").base46.transparency
 
   for i = 1, #list, 1 do
     local name = list[i]
     local theme_colors =  get_theme_colors(name)
-    local theme_bg = theme_colors.base00
+    local theme_bg = transparency and "NONE" or theme_colors.base00
 
     local linehl = "NvT" .. i .. "line"
     api.nvim_set_hl(state.ns, linehl, { bg = theme_bg, fg = theme_colors.base07 })
@@ -47,11 +48,12 @@ end
 M.flat = function()
   local result = {}
   local list = state.themes_shown
+  local transparency = require("nvconfig").base46.transparency
 
   for i = 1, #list, 1 do
     local name = list[i]
     local theme_colors =  get_theme_colors(name)
-    local theme_bg = theme_colors.base00
+    local theme_bg = transparency and "NONE" or theme_colors.base00
 
     local linehl = "NvT" .. i .. "line"
     api.nvim_set_hl(state.ns, linehl, { bg = theme_bg, fg = theme_colors.base07 })
