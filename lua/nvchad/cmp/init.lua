@@ -83,4 +83,28 @@ local M = {
   },
 }
 
+-- Rebuild the window config when transparency is toggled at runtime
+-- (the bufferline button fires base46.toggle_transparency -> NvThemeReload).
+-- module-level `transparency`/`style` above are stale after a toggle.
+local group = vim.api.nvim_create_augroup("NvChadCmpTransparency", { clear = true })
+
+vim.api.nvim_create_autocmd("User", {
+  pattern = "NvThemeReload",
+  group = group,
+  callback = function()
+    if not package.loaded["cmp"] then
+      -- cmp not loaded yet; its opts will be built fresh on InsertEnter
+      return
+    end
+
+    package.loaded["nvchad.cmp"] = nil
+    local ok, new_config = pcall(require, "nvchad.cmp")
+
+    if ok then
+      -- cmp.setup merges, so mappings/sources are kept and window is updated
+      require("cmp").setup(new_config)
+    end
+  end,
+})
+
 return M
