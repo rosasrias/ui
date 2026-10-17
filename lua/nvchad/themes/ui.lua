@@ -25,8 +25,12 @@ M.compact = function()
     api.nvim_set_hl(state.ns, themeNameHl, { fg = theme_colors.base07, bg = theme_bg })
 
     -- theme name + palette colors
+    local active_row = i == state.index
+    local active_icon = (transparency and active_row) and " \u{F0D9}" or ""
+
     local padding = state.longest_name - #name + state.word_gap + 1
-    local line = { { " " .. name .. string.rep(" ", padding), themeNameHl } }
+    padding = (transparency and active_row) and padding - 2 or padding
+    local line = { { " " .. name .. active_icon .. string.rep(" ", padding), themeNameHl } }
 
     -- colored icons
     for color_i, color in ipairs(state.order) do
@@ -36,7 +40,6 @@ M.compact = function()
     end
 
     -- active indicator
-    local active_row = i == state.index
     local thumb = active_row and "┃" or "│"
     table.insert(line, { " " .. thumb, active_row and "ExBlue" or "NScrollbarOff" })
     table.insert(result, line)
@@ -48,6 +51,7 @@ end
 M.flat = function()
   local result = {}
   local list = state.themes_shown
+  local last_index = #list
   local transparency = require("nvconfig").base46.transparency
 
   for i = 1, #list, 1 do
@@ -80,7 +84,16 @@ M.flat = function()
     table.insert(line, { "  ", linehl })
     table.insert(result, { { string.rep(" ", state.w - 2), linehl } })
     table.insert(result, line)
-    table.insert(result, { { string.rep(" ", state.w - 2), linehl } })
+
+    if transparency and i ~= last_index then
+      -- separator between themes so the picker doesn't look empty, like bordered
+      local active_border = (active or state.index == i + 1)
+      local sep_hl = active_border and "ExBlue" or "linenr"
+      local sep_icon = active_border and "─" or "-"
+      table.insert(result, { { string.rep(sep_icon, state.w - 2), sep_hl } })
+    else
+      table.insert(result, { { string.rep(" ", state.w - 2), linehl } })
+    end
   end
 
   return result
