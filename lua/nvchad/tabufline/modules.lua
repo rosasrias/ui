@@ -66,7 +66,7 @@ local function register_callbacks()
     endfunction
 
     function! TbRun(a,b,c,d)
-      lua require('code-runner').build_run()
+      lua require('ignition').build_run()
     endfunction
   ]]
 end
