@@ -3,7 +3,7 @@ local g = vim.g
 local M = {}
 local set_buf = api.nvim_set_current_buf
 
-g.nvchad_terms = {}
+g.nvchad_terms = g.nvchad_terms or {}
 
 local pos_data = {
   sp = { resize = "height", area = "lines" },
