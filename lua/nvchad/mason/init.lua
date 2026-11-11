@@ -63,7 +63,9 @@ M.install_all = function()
       pending = pending - 1
 
       if pending == 0 then
-        vim.api.nvim_exec_autocmds("User", { pattern = "MasonInstallAllComplete" })
+        vim.schedule(function()
+          vim.api.nvim_exec_autocmds("User", { pattern = "MasonInstallAllComplete" })
+        end)
       end
     end
 
