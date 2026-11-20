@@ -94,7 +94,7 @@ M.flat = function()
     local padding = state.longest_name - #name + state.word_gap + 4
 
     local active = i == state.index
-    local active_icon = active and " <U+F0D9>" or ""
+    local active_icon = active and "\u{F0D9}" or ""
     padding = active and padding - 2 or padding
 
     local line = {
@@ -139,7 +139,7 @@ M.bordered = function()
     local padding = state.longest_name - #name + state.word_gap
 
     local active = i == state.index
-    local active_icon = active and " <U+F0D9>" or ""
+    local active_icon = active and "\u{F0D9}" or ""
     local active_hl = active and "ExBlue" or "Normal"
 
     padding = active and padding - 2 or padding
