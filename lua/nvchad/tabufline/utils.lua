@@ -1,3 +1,4 @@
+
 local M = {}
 
 local api = vim.api
@@ -5,10 +6,11 @@ local get_opt = api.nvim_get_option_value
 local strep = string.rep
 local cur_buf = api.nvim_get_current_buf
 local buf_name = api.nvim_buf_get_name
+local opts = require("nvconfig").ui.tabufline
 
 local icon_cache = {}
 
-local FALLBACK_ICON = "󰈚"
+local FALLBACK_ICON = "<U+F021A>"
 local FALLBACK_HL = "DevIconDefault"
 
 local function filename(path)
@@ -78,11 +80,18 @@ local function new_hl(group1, group2)
 end
 
 local function gen_unique_name(name, index)
-  for i2, nr2 in ipairs(vim.t.bufs) do
+  local buffers = vim.t.bufs
+  local indexed_buf = buffers[index]
+
+  if not indexed_buf then
+    return
+  end
+
+  for i2, nr2 in ipairs(buffers) do
     local filepath = filename(buf_name(nr2))
 
     if index ~= i2 and filepath == name then
-      return vim.fn.fnamemodify(buf_name(vim.t.bufs[index]), ":h:t") .. "/" .. name
+      return vim.fn.fnamemodify(buf_name(indexed_buf), ":h:t") .. "/" .. name
     end
   end
 end
@@ -114,20 +123,22 @@ M.style_buf = function(nr, index, width)
 
   icon_hl = new_hl(icon_hl, tb_hl_name)
 
-  local max_name_len = math.max(1, width - 7)
+  local number = opts.numbers and (tostring(index) .. " ") or ""
+
+  local max_name_len = math.max(1, width - 7 - #number)
 
   if #name > max_name_len then
-    name = name:sub(1, max_name_len - 2) .. ".."
+    name = name:sub(1, math.max(1, max_name_len - 2)) .. ".."
   end
 
   local name_width = vim.fn.strdisplaywidth(name)
 
-  local pad = math.floor((width - name_width - 5) / 2)
-
+  local pad = math.floor((width - name_width - 5 - #number) / 2)
   pad = math.max(1, pad)
 
   local content = table.concat {
     strep(" ", pad),
+    M.txt(number, tb_hl_name),
     icon_hl,
     " ",
     icon,
@@ -143,11 +154,15 @@ M.style_buf = function(nr, index, width)
   })
 
   if modified then
-    close_btn = M.txt("  ", is_current and "BufOnModified" or "BufOffModified")
+    close_btn = M.txt(
+      " <U+F444> ",
+      is_current and "BufOnModified" or "BufOffModified"
+    )
   else
     local close_hl = is_current and "KillBufOn" or "KillBufOff"
+
     close_btn = M.btn(
-      " 󰅖 ",
+      " <U+F0156> ",
       close_hl,
       "TbKillBuf",
       nr
@@ -156,7 +171,7 @@ M.style_buf = function(nr, index, width)
 
   content = M.btn(content, nil, "TbGoToBuf", nr)
 
- return M.txt(content .. close_btn, tb_hl_name)
+  return M.txt(content .. close_btn, tb_hl_name)
 end
 
 return M

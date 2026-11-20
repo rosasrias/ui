@@ -7,6 +7,10 @@ local needs_hl = utils.not_colored
 
 local M = {}
 
+local channel = function(v, a)
+  return math.max(0, math.min(255, math.floor(v * a * 255 + 0.5)))
+end
+
 M.hex = function(buf, line, str)
   for col, hex in str:gmatch "()(#%x%x%x%x%x%x)" do
     col = col - 1
@@ -33,6 +37,10 @@ M.lsp_var = function(buf, line, min, max)
   for _, client in pairs(vim.lsp.get_clients { bufnr = buf }) do
     if client.server_capabilities.colorProvider then
       client:request("textDocument/documentColor", param, function(_, resp)
+        if not api.nvim_buf_is_valid(buf) then
+          return
+        end
+
         if resp and line then
           resp = vim.tbl_filter(function(v)
             return v.range["start"].line == line
@@ -53,7 +61,7 @@ M.lsp_var = function(buf, line, min, max)
             a = a / 255
           end
 
-          local hex = string.format("#%02x%02x%02x", r * a * 255, g * a * 255, b * a * 255)
+          local hex = string.format("#%02x%02x%02x", channel(r, a), channel(g, a), channel(b, a))
 
           local hl_group = utils.add_hl(hex)
 

@@ -53,33 +53,73 @@ local function get_symbol_to_rename(cb)
   end
 end
 
-return function()
+local function apply_rename(err, result, ctx)
+  local loaded = vim.tbl_filter(api.nvim_buf_is_loaded, api.nvim_list_bufs())
+  lsp.handlers["textDocument/rename"](err, result, ctx)
+
+  for _, buf in ipairs(api.nvim_list_bufs()) do
+    if api.nvim_buf_is_loaded(buf) and not vim.tbl_contains(loaded, buf) then
+      api.nvim_buf_call(buf, function() vim.cmd "silent noautocmd write" end)
+      api.nvim_buf_delete(buf, {})
+    end
+  end
+end
+
+return function(opts)
   get_symbol_to_rename(function(to_rename)
     local buf = api.nvim_create_buf(false, true)
+
+    local default_opts = {
+      border = "single",
+      right_padding = 15,
+      title = "Rename",
+      title_hl_group = "@comment.danger",
+      border_hl_group = "Removed",
+      show_original = true,
+      allow_normal = false,
+    }
+    opts = vim.tbl_deep_extend("force", default_opts, opts or {})
 
     local winopts = {
       height = 1,
       style = "minimal",
-      border = "single",
+      border = opts.border,
       row = 1,
       col = 1,
       relative = "cursor",
-      width = #to_rename + 15,
-      title = { { " Renamer ", "@comment.danger" } },
+      width = #to_rename + opts.right_padding,
+      title = { { " " .. opts.title .. " ", opts.title_hl_group } },
       title_pos = "center",
     }
 
     local win = api.nvim_open_win(buf, true, winopts)
-    vim.wo[win].winhl = "Normal:Normal,FloatBorder:Removed"
+    vim.wo[win].winhl = "Normal:Normal,FloatBorder:" .. opts.border_hl_group
     api.nvim_set_current_win(win)
 
     vim.bo[buf].buftype = "prompt"
     vim.fn.prompt_setprompt(buf, "")
 
-    api.nvim_buf_set_lines(buf, 0, -1, true, { " " .. to_rename })
+    if opts.show_original then
+      api.nvim_buf_set_lines(buf, 0, -1, true, { " " .. to_rename })
+    else
+      api.nvim_buf_set_lines(buf, 0, -1, true, { " " })
+    end
+
     vim.api.nvim_input "A"
 
-    vim.keymap.set({ "i", "n" }, "<Esc>", function()
+    vim.keymap.set("i", "<C-w>", function()
+      api.nvim_input "<c-s-w>"
+    end, { buffer = buf })
+
+    local modes
+
+    if opts.allow_normal then
+      modes = { "n" }
+    else
+      modes = { "n", "i" }
+    end
+
+    vim.keymap.set(modes, "<Esc>", function()
       api.nvim_buf_delete(buf, { force = true })
     end, { buffer = buf })
 
@@ -90,7 +130,11 @@ return function()
       if #newName > 0 and newName ~= to_rename then
         local params = lsp.util.make_position_params(0, "utf-8")
         params = vim.tbl_extend("force", params, { newName = newName })
-        lsp.buf_request(0, "textDocument/rename", params)
+        lsp.buf_request(0, "textDocument/rename", params, apply_rename)
+
+        vim.schedule(function()
+          vim.cmd "stopinsert"
+        end)
       end
     end)
   end)

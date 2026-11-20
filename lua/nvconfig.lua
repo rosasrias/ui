@@ -18,6 +18,7 @@ local options = {
       abbr_maxwidth = 60,
       -- for tailwind, css lsp etc
       format_colors = { lsp = true, icon = "󱓻" },
+      matchl = true,
     },
 
     telescope = { style = "borderless" }, -- borderless / bordered
@@ -49,6 +50,7 @@ local options = {
       },
       modules = nil,
       bufwidth = 21,
+      numbers = false,
     },
   },
 
@@ -112,6 +114,7 @@ local options = {
 
   cheatsheet = {
     theme = "grid", -- simple/grid
+    maxdesclen = 25, -- max length of a mapping description, longer ones get cut
     excluded_groups = { "terminal (t)", "autopairs", "Nvim", "Opens" }, -- can add group name or with mode
   },
 

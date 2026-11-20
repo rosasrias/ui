@@ -1,3 +1,4 @@
+
 local M = {}
 
 local api = vim.api
@@ -18,7 +19,10 @@ M.next = function()
   local curbuf_index = buf_index(cur_buf())
 
   if not curbuf_index then
-    set_buf(bufs[1])
+    if bufs[1] then
+      set_buf(bufs[1])
+    end
+
     return
   end
 
@@ -30,7 +34,10 @@ M.prev = function()
   local curbuf_index = buf_index(cur_buf())
 
   if not curbuf_index then
-    set_buf(bufs[1])
+    if bufs[1] then
+      set_buf(bufs[1])
+    end
+
     return
   end
 
