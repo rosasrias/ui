@@ -10,7 +10,7 @@ local opts = require("nvconfig").ui.tabufline
 
 local icon_cache = {}
 
-local FALLBACK_ICON = "<U+F021A>"
+local FALLBACK_ICON = "\u{F021A}"
 local FALLBACK_HL = "DevIconDefault"
 
 local function filename(path)
@@ -155,14 +155,14 @@ M.style_buf = function(nr, index, width)
 
   if modified then
     close_btn = M.txt(
-      " <U+F444> ",
+      " \u{F444} ",
       is_current and "BufOnModified" or "BufOffModified"
     )
   else
     local close_hl = is_current and "KillBufOn" or "KillBufOff"
 
     close_btn = M.btn(
-      " <U+F0156> ",
+      " \u{F0156} ",
       close_hl,
       "TbKillBuf",
       nr
